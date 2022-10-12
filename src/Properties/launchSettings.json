@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "OwlCore.Storage.OneDrive": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ClientID": "_",
+        "TenantId": "_",
+        "RedirectUrl": "_"
+      }
+    }
+  }
+}

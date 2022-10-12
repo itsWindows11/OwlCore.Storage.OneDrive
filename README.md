@@ -1,25 +1,16 @@
-# OwlCore.Template [![Version](https://img.shields.io/nuget/v/OwlCore.Template.svg)](https://www.nuget.org/packages/OwlCore.Template)
+# OwlCore.Storage.OneDrive [![Version](https://img.shields.io/nuget/v/OwlCore.Storage.OneDrive.svg)](https://www.nuget.org/packages/OwlCore.Storage.OneDrive)
 
-Description goes here.
-
-Extended description goes here. Tell people why they should use your module, how they can install it, and how they can use it. Documentation takes work!
-
-## 
-
-## Featuring:
-- x
-- y
-- z
+An implementation of OwlCore.Storage that uses MSGraph to access OneDrive.
 
 ## Install
 
-Published releases are available on [NuGet](https://www.nuget.org/packages/OwlCore.Template). To install, run the following command in the [Package Manager Console](https://docs.nuget.org/docs/start-here/using-the-package-manager-console).
+Published releases are available on [NuGet](https://www.nuget.org/packages/OwlCore.Storage.OneDrive). To install, run the following command in the [Package Manager Console](https://docs.nuget.org/docs/start-here/using-the-package-manager-console).
 
-    PM> Install-Package OwlCore.Template
+    PM> Install-Package OwlCore.Storage.OneDrive
     
 Or using [dotnet](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet)
 
-    > dotnet add package OwlCore.Template
+    > dotnet add package OwlCore.Storage.OneDrive
 
 ## Usage
 
