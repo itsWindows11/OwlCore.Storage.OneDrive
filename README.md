@@ -2,6 +2,8 @@
 
 An implementation of OwlCore.Storage that uses MSGraph to access OneDrive.
 
+**NOTE:** This library is read-only for now, and doesn't support modifying folder contents. Check back later.
+
 ## Install
 
 Published releases are available on [NuGet](https://www.nuget.org/packages/OwlCore.Storage.OneDrive). To install, run the following command in the [Package Manager Console](https://docs.nuget.org/docs/start-here/using-the-package-manager-console).
