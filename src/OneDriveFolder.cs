@@ -32,32 +32,35 @@ public class OneDriveFolder : IFolder, IAddressableFolder
     public string Name => _driveItem.Name;
 
     /// <inheritdoc />
-    public string Path => throw new NotImplementedException();
+    public string Path => System.IO.Path.GetFullPath(_driveItem.ParentReference?.Path is null ? "/drive/root" : System.IO.Path.Combine(_driveItem.ParentReference.Path, Name));
 
     /// <inheritdoc />
     public virtual async IAsyncEnumerable<IAddressableStorable> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var driveItem = await _graphClient.Drive.Items[Id].Request().Expand(EXPAND_STRING).GetAsync();
+        var driveItem = await _graphClient.Drive.Items[Id].Request().Expand(EXPAND_STRING).GetAsync(cancellationToken);
 
         foreach (var item in driveItem.Children)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             if (item.Folder is not null && type.HasFlag(StorableType.Folder))
-                yield return new OneDriveFolder(_graphClient, driveItem);
+                yield return new OneDriveFolder(_graphClient, item);
 
             if (item.File is not null && type.HasFlag(StorableType.File))
-                yield return new OneDriveFile(_graphClient, driveItem);
+                yield return new OneDriveFile(_graphClient, item);
         }
     }
 
     /// <inheritdoc />
-    public virtual Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default)
     {
-        cancellationToken.ThrowIfCancellationRequested();
+        if (_driveItem.ParentReference is null)
+            return null;
 
-        throw new NotImplementedException();
+        var parentDriveItem = await _graphClient.Drive.Items[_driveItem.ParentReference.Id].Request().Expand(EXPAND_STRING).GetAsync(cancellationToken);
+
+        return new OneDriveFolder(_graphClient, parentDriveItem);
     }
 }
