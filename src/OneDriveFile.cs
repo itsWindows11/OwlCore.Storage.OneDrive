@@ -34,7 +34,7 @@ public class OneDriveFile : IFile, IAddressableFile
     /// <inheritdoc />
     public virtual async Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default)
     {
-        var parent = await _graphClient.Drive.Items[_driveItem.ParentReference.DriveId].Request().GetAsync();
+        var parent = await _graphClient.Drive.Items[_driveItem.ParentReference.DriveId].Request().GetAsync(cancellationToken);
 
         return new OneDriveFolder(_graphClient, parent);
     }
@@ -42,6 +42,6 @@ public class OneDriveFile : IFile, IAddressableFile
     /// <inheritdoc />
     public Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default)
     {
-        return _graphClient.Drive.Items[_driveItem.Id].Content.Request().GetAsync();
+        return _graphClient.Drive.Items[_driveItem.Id].Content.Request().GetAsync(cancellationToken);
     }
 }
