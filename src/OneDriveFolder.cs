@@ -10,7 +10,7 @@ namespace OwlCore.Storage.OneDrive;
 /// <summary>
 /// A folder implementation that interacts with a folder in OneDrive.
 /// </summary>
-public class OneDriveFolder : IModifiableFolder, IChildFolder, IFastGetItem, IFastGetItemRecursive
+public class OneDriveFolder : IChildFolder, IFastGetItem, IFastGetItemRecursive
 {
     private const string EXPAND_STRING = "children";
     private readonly GraphServiceClient _graphClient;
