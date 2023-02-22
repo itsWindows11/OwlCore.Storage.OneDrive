@@ -8,10 +8,9 @@ namespace OwlCore.Storage.OneDrive;
 /// <summary>
 /// A file implementation that interacts with a file in OneDrive.
 /// </summary>
-public class OneDriveFile : IFile, IAddressableFile
+public class OneDriveFile : IFile, IChildFile
 {
     private readonly GraphServiceClient _graphClient;
-    private readonly DriveItem _driveItem;
 
     /// <summary>
     /// Creates a new instance of <see cref="OneDriveFile"/>.
@@ -19,22 +18,24 @@ public class OneDriveFile : IFile, IAddressableFile
     public OneDriveFile(GraphServiceClient graphClient, DriveItem driveItem)
     {
         _graphClient = graphClient;
-        _driveItem = driveItem;
+        DriveItem = driveItem;
     }
 
-    /// <inheritdoc />
-    public string Id => _driveItem.Id;
+    /// <summary>
+    /// The graph item that was provided as the backing implementation for this file.
+    /// </summary>
+    public DriveItem DriveItem { get; }
 
     /// <inheritdoc />
-    public string Name => _driveItem.Name;
+    public string Id => DriveItem.Id;
 
     /// <inheritdoc />
-    public string Path => throw new System.NotImplementedException();
+    public string Name => DriveItem.Name;
 
     /// <inheritdoc />
     public virtual async Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default)
     {
-        var parent = await _graphClient.Drive.Items[_driveItem.ParentReference.DriveId].Request().GetAsync(cancellationToken);
+        var parent = await _graphClient.Drive.Items[DriveItem.ParentReference.DriveId].Request().GetAsync(cancellationToken);
 
         return new OneDriveFolder(_graphClient, parent);
     }
@@ -42,6 +43,6 @@ public class OneDriveFile : IFile, IAddressableFile
     /// <inheritdoc />
     public Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default)
     {
-        return _graphClient.Drive.Items[_driveItem.Id].Content.Request().GetAsync(cancellationToken);
+        return _graphClient.Drive.Items[DriveItem.Id].Content.Request().GetAsync(cancellationToken);
     }
 }

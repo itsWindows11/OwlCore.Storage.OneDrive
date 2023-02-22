@@ -14,13 +14,17 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.0.0</Version>
+		<Version>0.1.0</Version>
 		<Product>OwlCore</Product>
 		<Description></Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Storage.OneDrive</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.1.0 ---
+[Breaking]
+Inherited/migrated breaking changes from OwlCore.Storage 0.8.0.
+
 --- 0.0.0 ---
 [New]
 Initial release of OwlCore.Storage.OneDrive.
@@ -57,7 +61,7 @@ Initial release of OwlCore.Storage.OneDrive.
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Graph" Version="4.49.0" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-		<PackageReference Include="OwlCore.Storage" Version="0.5.2" />
+		<PackageReference Include="OwlCore.Storage" Version="0.8.0" />
 		<PackageReference Include="System.Linq.Async" Version="6.0.1" />
 	</ItemGroup>
 

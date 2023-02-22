@@ -1,6 +1,6 @@
 ﻿using Microsoft.Graph;
-using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,11 +10,10 @@ namespace OwlCore.Storage.OneDrive;
 /// <summary>
 /// A folder implementation that interacts with a folder in OneDrive.
 /// </summary>
-public class OneDriveFolder : IFolder, IAddressableFolder
+public class OneDriveFolder : IModifiableFolder, IChildFolder, IFastGetItem, IFastGetItemRecursive
 {
     private const string EXPAND_STRING = "children";
     private readonly GraphServiceClient _graphClient;
-    private readonly DriveItem _driveItem;
 
     /// <summary>
     /// Creates a new instance of <see cref="OneDriveFolder"/>.
@@ -22,20 +21,22 @@ public class OneDriveFolder : IFolder, IAddressableFolder
     public OneDriveFolder(GraphServiceClient graphClient, DriveItem driveItem)
     {
         _graphClient = graphClient;
-        _driveItem = driveItem;
+        DriveItem = driveItem;
     }
 
     /// <inheritdoc />
-    public string Id => _driveItem.Id;
+    public string Id => DriveItem.Id;
 
     /// <inheritdoc />
-    public string Name => _driveItem.Name;
+    public string Name => DriveItem.Name;
+
+    /// <summary>
+    /// The graph item that was provided as the backing implementation for this file.
+    /// </summary>
+    public DriveItem DriveItem { get; }
 
     /// <inheritdoc />
-    public string Path => System.IO.Path.GetFullPath(_driveItem.ParentReference?.Path is null ? "/drive/root" : System.IO.Path.Combine(_driveItem.ParentReference.Path, Name));
-
-    /// <inheritdoc />
-    public virtual async IAsyncEnumerable<IAddressableStorable> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public virtual async IAsyncEnumerable<IStorableChild> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -54,12 +55,36 @@ public class OneDriveFolder : IFolder, IAddressableFolder
     }
 
     /// <inheritdoc />
+    public Task<IStorableChild> GetItemRecursiveAsync(string id, CancellationToken cancellationToken = default) => GetItemAsync(id, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<IStorableChild> GetItemAsync(string id, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var driveItem = await _graphClient.Drive.Items[id].Request().GetAsync(cancellationToken);
+
+            if (driveItem?.Folder is not null)
+                return new OneDriveFolder(_graphClient, driveItem);
+
+            if (driveItem?.File is not null)
+                return new OneDriveFile(_graphClient, driveItem);
+        }
+        catch
+        {
+            // ignored
+        }
+
+        throw new FileNotFoundException();
+    }
+
+    /// <inheritdoc />
     public virtual async Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default)
     {
-        if (_driveItem.ParentReference is null)
+        if (DriveItem.ParentReference is null)
             return null;
 
-        var parentDriveItem = await _graphClient.Drive.Items[_driveItem.ParentReference.Id].Request().Expand(EXPAND_STRING).GetAsync(cancellationToken);
+        var parentDriveItem = await _graphClient.Drive.Items[DriveItem.ParentReference.Id].Request().Expand(EXPAND_STRING).GetAsync(cancellationToken);
 
         return new OneDriveFolder(_graphClient, parentDriveItem);
     }
