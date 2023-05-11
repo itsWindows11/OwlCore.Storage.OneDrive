@@ -1,4 +1,5 @@
 ﻿using Microsoft.Graph;
+using Microsoft.Graph.Models;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -10,9 +11,8 @@ namespace OwlCore.Storage.OneDrive;
 /// <summary>
 /// A folder implementation that interacts with a folder in OneDrive.
 /// </summary>
-public class OneDriveFolder : IChildFolder, IFastGetItem, IFastGetItemRecursive
+public class OneDriveFolder : IChildFolder, IFastGetItem, IFastGetItemRecursive, IFastGetRoot
 {
-    private const string EXPAND_STRING = "children";
     private readonly GraphServiceClient _graphClient;
 
     /// <summary>
@@ -40,16 +40,17 @@ public class OneDriveFolder : IChildFolder, IFastGetItem, IFastGetItemRecursive
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var driveItem = await _graphClient.Drive.Items[Id].Request().Expand(EXPAND_STRING).GetAsync(cancellationToken);
+        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+        var result = await _graphClient.Drives[drive.Id].Items[Id].Children.GetAsync(cancellationToken: cancellationToken);
 
-        foreach (var item in driveItem.Children)
+        foreach (var item in result.Value)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             if (item.Folder is not null && type.HasFlag(StorableType.Folder))
                 yield return new OneDriveFolder(_graphClient, item);
 
-            if (item.File is not null && type.HasFlag(StorableType.File))
+            if (item.FileObject is not null && type.HasFlag(StorableType.File))
                 yield return new OneDriveFile(_graphClient, item);
         }
     }
@@ -62,12 +63,13 @@ public class OneDriveFolder : IChildFolder, IFastGetItem, IFastGetItemRecursive
     {
         try
         {
-            var driveItem = await _graphClient.Drive.Items[id].Request().GetAsync(cancellationToken);
+            var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+            var driveItem = await _graphClient.Drives[drive.Id].Items[id].GetAsync(cancellationToken: cancellationToken);
 
             if (driveItem?.Folder is not null)
                 return new OneDriveFolder(_graphClient, driveItem);
 
-            if (driveItem?.File is not null)
+            if (driveItem?.FileObject is not null)
                 return new OneDriveFile(_graphClient, driveItem);
         }
         catch
@@ -84,8 +86,21 @@ public class OneDriveFolder : IChildFolder, IFastGetItem, IFastGetItemRecursive
         if (DriveItem.ParentReference is null)
             return null;
 
-        var parentDriveItem = await _graphClient.Drive.Items[DriveItem.ParentReference.Id].Request().Expand(EXPAND_STRING).GetAsync(cancellationToken);
+        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+        var parentDriveItem = await _graphClient.Drives[drive.Id].Items[DriveItem.ParentReference.Id].GetAsync(cancellationToken: cancellationToken);
 
         return new OneDriveFolder(_graphClient, parentDriveItem);
+    }
+
+    /// <inheritdoc />
+    public async Task<IFolder?> GetRootAsync()
+    {
+        if (DriveItem.Root is null)
+            return null;
+
+        var drive = await _graphClient.Me.Drive.GetAsync();
+        var rootDriveItem = await _graphClient.Drives[drive.Id].Root.GetAsync();
+
+        return new OneDriveFolder(_graphClient, rootDriveItem);
     }
 }

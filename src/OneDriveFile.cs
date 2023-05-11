@@ -1,4 +1,5 @@
 using Microsoft.Graph;
+using Microsoft.Graph.Models;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -35,14 +36,18 @@ public class OneDriveFile : IFile, IChildFile
     /// <inheritdoc />
     public virtual async Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default)
     {
-        var parent = await _graphClient.Drive.Items[DriveItem.ParentReference.DriveId].Request().GetAsync(cancellationToken);
+        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+        var parent = await _graphClient.Drives[drive.Id].Items[DriveItem.ParentReference.Id].GetAsync(cancellationToken: cancellationToken);
 
         return new OneDriveFolder(_graphClient, parent);
     }
 
     /// <inheritdoc />
-    public Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default)
+    public async Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default)
     {
-        return _graphClient.Drive.Items[DriveItem.Id].Content.Request().GetAsync(cancellationToken);
+        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+        var result = await _graphClient.Drives[drive.Id].Items[Id].Content.GetAsync(cancellationToken: cancellationToken);
+
+        return result;
     }
 }

@@ -21,22 +21,23 @@ Or using [dotnet](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet)
 // See https://learn.microsoft.com/en-us/graph/sdks/create-client?tabs=CS for instructions.
 var graphClient = CreateGraphClient(...);
 
-// Then, obtain an instance of DriveItem.
+// Then, get the desired drive to work in.
+var drive = await graphClient.Me.Drive.GetAsync();
 
-// To get folder from a known folder ID:
-var knownFolderId = ...;
-var driveItem = await graphClient.Drive.Items[knownFolderId].Request().GetAsync(cancellationToken);
+// To get folder from a known folder Id:
+var knownFolderId = "someId";
+var driveItem = await graphClient.Drives[driveItem.Id].Items[knownFolderId].GetAsync();
 
 // To get user's root folder in OneDrive:
-var driveItem = await graphClient.Drive.Root.Request().Expand("children").GetAsync(cancellationToken);
+var driveItem = await graphClient.Drives[drive.Id].Root.GetAsync();
 
 // Then pass to a new OneDrive folder
-IFolder oneDrive = new OneDriveFolder(graphClient, driveItem);
+var oneDrive = new OneDriveFolder(graphClient, driveItem);
 
 // Retrieve all files in the folder
-await foreach(var file in oneDrive.GetFilesAsync())
+await foreach (var file in oneDrive.GetFilesAsync())
 {
-    ...
+    // ...
 }
 ```
 
