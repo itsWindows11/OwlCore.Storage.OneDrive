@@ -2,7 +2,7 @@
 
 An implementation of OwlCore.Storage that uses MSGraph to access OneDrive.
 
-**NOTE:** This library is read-only for now, and doesn't support modifying folder contents. Check back later.
+**NOTE:** This library is read-only for now, and doesn't support modifying folder contents. Check back later, or feel free to submit a PR.
 
 ## Install
 
