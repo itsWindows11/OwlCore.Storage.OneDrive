@@ -16,11 +16,12 @@ Or using [dotnet](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet)
 
 ## Usage
 
+Before you begin, obtain an instance of a `GraphClient` from either: 
+- The official [`Microsoft.Graph`](https://learn.microsoft.com/en-us/graph/sdks/create-client?tabs=CS) libraries. 
+- or, the [`CommunityToolkit.Graph`](https://github.com/CommunityToolkit/Graph-Controls) helpers. This is recommended for apps in the Microsoft Store.
+
+
 ```cs
-// First, obtain an instance of GraphServiceClient using the Microsoft.Graph. 
-// For instructions, see either:
-// https://learn.microsoft.com/en-us/graph/sdks/create-client?tabs=CS
-// https://github.com/CommunityToolkit/Graph-Controls
 var graphClient = CreateGraphClient(...);
 
 // Then, get the desired drive to work in.
