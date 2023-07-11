@@ -29,7 +29,7 @@ var drive = await graphClient.Me.Drive.GetAsync();
 
 // To get folder from a known folder Id:
 var knownFolderId = "someId";
-var driveItem = await graphClient.Drives[driveItem.Id].Items[knownFolderId].GetAsync();
+var driveItem = await graphClient.Drives[drives.Id].Items[knownFolderId].GetAsync();
 
 // To get user's root folder in OneDrive:
 var driveItem = await graphClient.Drives[drive.Id].Root.GetAsync();
