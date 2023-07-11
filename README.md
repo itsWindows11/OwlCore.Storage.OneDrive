@@ -18,7 +18,9 @@ Or using [dotnet](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet)
 
 ```cs
 // First, obtain an instance of GraphServiceClient using the Microsoft.Graph. 
-// See https://learn.microsoft.com/en-us/graph/sdks/create-client?tabs=CS for instructions.
+// For instructions, see either:
+// https://learn.microsoft.com/en-us/graph/sdks/create-client?tabs=CS
+// https://github.com/CommunityToolkit/Graph-Controls
 var graphClient = CreateGraphClient(...);
 
 // Then, get the desired drive to work in.
