@@ -16,7 +16,7 @@ Or using [dotnet](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet)
 
 ## Usage
 
-Before you begin, obtain an instance of a `GraphClient` from either: 
+Before you begin, obtain an instance of a `GraphServiceClient` from either: 
 - The official [`Microsoft.Graph`](https://learn.microsoft.com/en-us/graph/sdks/create-client?tabs=CS) libraries. 
 - The [`CommunityToolkit.Graph`](https://github.com/CommunityToolkit/Graph-Controls) helpers. Recommended for apps in the Microsoft Store.
 
