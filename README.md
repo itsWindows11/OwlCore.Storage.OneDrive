@@ -31,16 +31,27 @@ var drive = await graphClient.Me.Drive.GetAsync();
 var knownFolderId = "someId";
 var driveItem = await graphClient.Drives[drives.Id].Items[knownFolderId].GetAsync();
 
-// To get user's root folder in OneDrive:
+// Or, to get user's root folder in OneDrive:
 var driveItem = await graphClient.Drives[drive.Id].Root.GetAsync();
 
-// Then pass to a new OneDrive folder
+// Pass starting item to a new OneDrive folder
 var oneDrive = new OneDriveFolder(graphClient, driveItem);
 
-// Retrieve all files in the folder
-await foreach (var file in oneDrive.GetFilesAsync())
+// Interact with OneDrive via the storage abstraction.
+// Extension methods GetFilesAsync and GetFolderAsync also available.
+await foreach (var item in oneDrive.GetItemsAsync(StorableType.All))
 {
-    // ...
+    if (item is IFile file)
+    {
+        using var stream = await file.OpenStreamAsync();
+        // ...
+    }
+
+    if (item is IFolder folder)
+    {
+        var root = await folder.GetRootAsync();
+        // ... 
+    }
 }
 ```
 
