@@ -11,7 +11,7 @@ namespace OwlCore.Storage.OneDrive;
 /// <summary>
 /// A folder implementation that interacts with a folder in OneDrive.
 /// </summary>
-public class OneDriveFolder : IChildFolder, IFastGetItem, IFastGetItemRecursive, IFastGetRoot
+public class OneDriveFolder : IChildFolder, IGetItem, IGetItemRecursive, IGetRoot
 {
     private readonly GraphServiceClient _graphClient;
 
@@ -50,7 +50,7 @@ public class OneDriveFolder : IChildFolder, IFastGetItem, IFastGetItemRecursive,
             if (item.Folder is not null && type.HasFlag(StorableType.Folder))
                 yield return new OneDriveFolder(_graphClient, item);
 
-            if (item.FileObject is not null && type.HasFlag(StorableType.File))
+            if (item.File is not null && type.HasFlag(StorableType.File))
                 yield return new OneDriveFile(_graphClient, item);
         }
     }
@@ -69,7 +69,7 @@ public class OneDriveFolder : IChildFolder, IFastGetItem, IFastGetItemRecursive,
             if (driveItem?.Folder is not null)
                 return new OneDriveFolder(_graphClient, driveItem);
 
-            if (driveItem?.FileObject is not null)
+            if (driveItem?.File is not null)
                 return new OneDriveFile(_graphClient, driveItem);
         }
         catch
@@ -93,13 +93,13 @@ public class OneDriveFolder : IChildFolder, IFastGetItem, IFastGetItemRecursive,
     }
 
     /// <inheritdoc />
-    public async Task<IFolder?> GetRootAsync()
+    public async Task<IFolder?> GetRootAsync(CancellationToken cancellationToken = default)
     {
         if (DriveItem.Root is null)
             return null;
 
-        var drive = await _graphClient.Me.Drive.GetAsync();
-        var rootDriveItem = await _graphClient.Drives[drive.Id].Root.GetAsync();
+        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+        var rootDriveItem = await _graphClient.Drives[drive.Id].Root.GetAsync(cancellationToken: cancellationToken);
 
         return new OneDriveFolder(_graphClient, rootDriveItem);
     }

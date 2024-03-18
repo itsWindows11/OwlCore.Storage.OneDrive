@@ -21,6 +21,10 @@
     <PackageIcon>logo.png</PackageIcon>
     <PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Storage.OneDrive</PackageProjectUrl>
     <PackageReleaseNotes>
+--- 0.2.0 ---
+[Breaking]
+Inherited and migrated breaking changes from OwlCore.Storage 0.10.0.
+
 --- 0.1.1 ---
 [Fixes]
 Inherited fixes from OwlCore.Storage 0.8.2.
@@ -62,10 +66,10 @@ Initial release of OwlCore.Storage.OneDrive.
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Graph" Version="5.8.0" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-    <PackageReference Include="OwlCore.Storage" Version="0.8.3" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Graph" Version="5.44.0" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+    <PackageReference Include="OwlCore.Storage" Version="0.10.0" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
   </ItemGroup>
 
