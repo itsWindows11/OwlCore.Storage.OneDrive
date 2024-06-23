@@ -24,6 +24,7 @@ public class OneDriveFolder :
     IGetRoot
 {
     private readonly GraphServiceClient _graphClient;
+    private Drive? _drive;
 
     /// <summary>
     /// Creates a new instance of <see cref="OneDriveFolder"/>.
@@ -50,8 +51,8 @@ public class OneDriveFolder :
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
-        var result = await _graphClient.Drives[drive.Id].Items[Id].Children.GetAsync(cancellationToken: cancellationToken);
+        _drive ??= await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+        var result = await _graphClient.Drives[_drive.Id].Items[Id].Children.GetAsync(cancellationToken: cancellationToken);
 
         foreach (var item in result.Value)
         {
@@ -73,8 +74,8 @@ public class OneDriveFolder :
     {
         try
         {
-            var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
-            var driveItem = await _graphClient.Drives[drive.Id].Items[id].GetAsync(cancellationToken: cancellationToken);
+            _drive ??= await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+            var driveItem = await _graphClient.Drives[_drive.Id].Items[id].GetAsync(cancellationToken: cancellationToken);
 
             if (driveItem?.Folder is not null)
                 return new OneDriveFolder(_graphClient, driveItem);
@@ -96,8 +97,8 @@ public class OneDriveFolder :
         if (DriveItem.ParentReference is null)
             return null;
 
-        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
-        var parentDriveItem = await _graphClient.Drives[drive.Id].Items[DriveItem.ParentReference.Id].GetAsync(cancellationToken: cancellationToken);
+        _drive ??= await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+        var parentDriveItem = await _graphClient.Drives[_drive.Id].Items[DriveItem.ParentReference.Id].GetAsync(cancellationToken: cancellationToken);
 
         return new OneDriveFolder(_graphClient, parentDriveItem);
     }
@@ -108,8 +109,8 @@ public class OneDriveFolder :
         if (DriveItem.Root is null)
             return null;
 
-        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
-        var rootDriveItem = await _graphClient.Drives[drive.Id].Root.GetAsync(cancellationToken: cancellationToken);
+        _drive ??= await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+        var rootDriveItem = await _graphClient.Drives[_drive.Id].Root.GetAsync(cancellationToken: cancellationToken);
 
         return new OneDriveFolder(_graphClient, rootDriveItem);
     }
@@ -117,14 +118,14 @@ public class OneDriveFolder :
     /// <inheritdoc />
     public async Task DeleteAsync(IStorableChild item, CancellationToken cancellationToken = default)
     {
-        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
-        await _graphClient.Drives[drive.Id].Items[item.Id].DeleteAsync(cancellationToken: cancellationToken);
+        _drive ??= await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+        await _graphClient.Drives[_drive.Id].Items[item.Id].DeleteAsync(cancellationToken: cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<IChildFolder> CreateFolderAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
     {
-        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+        _drive ??= await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
 
         var folder = new DriveItem
         {
@@ -140,7 +141,7 @@ public class OneDriveFolder :
 
         try
         {
-            var createdFolder = await _graphClient.Drives[drive.Id].Items[Id].Children.PostAsync(folder, cancellationToken: cancellationToken);
+            var createdFolder = await _graphClient.Drives[_drive.Id].Items[Id].Children.PostAsync(folder, cancellationToken: cancellationToken);
             return new OneDriveFolder(_graphClient, createdFolder);
         }
         catch
@@ -154,7 +155,7 @@ public class OneDriveFolder :
     /// <inheritdoc />
     public async Task<IChildFile> CreateFileAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
     {
-        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+        _drive ??= await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
 
         var file = new DriveItem
         {
@@ -170,7 +171,7 @@ public class OneDriveFolder :
 
         try
         {
-            var createdFolder = await _graphClient.Drives[drive.Id].Items[Id].Children.PostAsync(file, cancellationToken: cancellationToken);
+            var createdFolder = await _graphClient.Drives[_drive.Id].Items[Id].Children.PostAsync(file, cancellationToken: cancellationToken);
             return new OneDriveFile(_graphClient, createdFolder);
         }
         catch
@@ -193,7 +194,7 @@ public class OneDriveFolder :
         if (fileToMove is not OneDriveFile)
             await fallback(this, fileToMove, source, overwrite, cancellationToken);
 
-        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+        _drive ??= await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
 
         var copyBody = new CopyPostRequestBody
         {
@@ -204,7 +205,7 @@ public class OneDriveFolder :
             },
         };
 
-        var newItem = await _graphClient.Drives[drive.Id].Items[fileToMove.Id].Copy.PostAsync(
+        var newItem = await _graphClient.Drives[_drive.Id].Items[fileToMove.Id].Copy.PostAsync(
             copyBody,
             cancellationToken: cancellationToken
         );
@@ -220,7 +221,7 @@ public class OneDriveFolder :
         if (fileToCopy is not OneDriveFile)
             await fallback(this, fileToCopy, overwrite, cancellationToken);
 
-        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+        _drive ??= await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
 
         var copyBody = new CopyPostRequestBody
         {
@@ -231,7 +232,7 @@ public class OneDriveFolder :
             },
         };
 
-        var newItem = await _graphClient.Drives[drive.Id].Items[fileToCopy.Id].Copy.PostAsync(
+        var newItem = await _graphClient.Drives[_drive.Id].Items[fileToCopy.Id].Copy.PostAsync(
             copyBody,
             cancellationToken: cancellationToken
         );
