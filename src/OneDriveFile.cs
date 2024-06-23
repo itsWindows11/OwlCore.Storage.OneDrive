@@ -1,6 +1,9 @@
 using Microsoft.Graph;
+using Microsoft.Graph.Drives.Item.Items.Item.CreateUploadSession;
 using Microsoft.Graph.Models;
+using Nerdbank.Streams;
 using System.IO;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -46,8 +49,15 @@ public class OneDriveFile : IFile, IChildFile
     public async Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default)
     {
         var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
-        var result = await _graphClient.Drives[drive.Id].Items[Id].Content.GetAsync(cancellationToken: cancellationToken);
+        var readStream = await _graphClient.Drives[drive.Id].Items[Id].Content.GetAsync(cancellationToken: cancellationToken);
+        
+        var uploadBody = new CreateUploadSessionPostRequestBody()
+        {
+            Item = new DriveItemUploadableProperties()
+        };
 
-        return result;
+        var uploadSession = await _graphClient.Drives[drive.Id].Items[Id].CreateUploadSession.PostAsync(uploadBody, cancellationToken: cancellationToken);
+        
+        return FullDuplexStream.Splice(readStream, new OneDriveWriteStream(uploadSession));
     }
 }

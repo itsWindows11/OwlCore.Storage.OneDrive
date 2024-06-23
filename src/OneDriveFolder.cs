@@ -1,7 +1,10 @@
 ﻿using Microsoft.Graph;
+using Microsoft.Graph.Drives.Item.Items.Item.Copy;
 using Microsoft.Graph.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,7 +14,14 @@ namespace OwlCore.Storage.OneDrive;
 /// <summary>
 /// A folder implementation that interacts with a folder in OneDrive.
 /// </summary>
-public class OneDriveFolder : IChildFolder, IGetItem, IGetItemRecursive, IGetRoot
+public class OneDriveFolder :
+    IModifiableFolder,
+    IChildFolder,
+    IMoveFrom,
+    ICreateCopyOf,
+    IGetItem,
+    IGetItemRecursive,
+    IGetRoot
 {
     private readonly GraphServiceClient _graphClient;
 
@@ -102,5 +112,130 @@ public class OneDriveFolder : IChildFolder, IGetItem, IGetItemRecursive, IGetRoo
         var rootDriveItem = await _graphClient.Drives[drive.Id].Root.GetAsync(cancellationToken: cancellationToken);
 
         return new OneDriveFolder(_graphClient, rootDriveItem);
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteAsync(IStorableChild item, CancellationToken cancellationToken = default)
+    {
+        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+        await _graphClient.Drives[drive.Id].Items[item.Id].DeleteAsync(cancellationToken: cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IChildFolder> CreateFolderAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
+    {
+        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+
+        var folder = new DriveItem
+        {
+            Name = name,
+            Folder = new Folder(),
+            AdditionalData = new Dictionary<string, object>
+            {
+                {
+                    "@microsoft.graph.conflictBehavior" , overwrite ? "replace" : "fail"
+                },
+            },
+        };
+
+        try
+        {
+            var createdFolder = await _graphClient.Drives[drive.Id].Items[Id].Children.PostAsync(folder, cancellationToken: cancellationToken);
+            return new OneDriveFolder(_graphClient, createdFolder);
+        }
+        catch
+        {
+            var item = await GetItemsAsync(StorableType.Folder, cancellationToken)
+                .FirstOrDefaultAsync(folder => folder.Name == name && folder is IChildFolder, cancellationToken);
+            return (IChildFolder?)item ?? throw new FileNotFoundException();
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<IChildFile> CreateFileAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
+    {
+        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+
+        var file = new DriveItem
+        {
+            Name = name,
+            File = new FileObject(),
+            AdditionalData = new Dictionary<string, object>
+            {
+                {
+                    "@microsoft.graph.conflictBehavior" , overwrite ? "replace" : "fail"
+                },
+            },
+        };
+
+        try
+        {
+            var createdFolder = await _graphClient.Drives[drive.Id].Items[Id].Children.PostAsync(file, cancellationToken: cancellationToken);
+            return new OneDriveFile(_graphClient, createdFolder);
+        }
+        catch
+        {
+            var item = await GetItemsAsync(StorableType.Folder, cancellationToken)
+                .FirstOrDefaultAsync(file => file.Name == name && file is IChildFile, cancellationToken);
+            return (IChildFile?)item ?? throw new FileNotFoundException();
+        }
+    }
+
+    /// <inheritdoc />
+    public Task<IFolderWatcher> GetFolderWatcherAsync(CancellationToken cancellationToken = default)
+    {
+        throw new NotSupportedException("Cannot watch OneDrive folders.");
+    }
+
+    /// <inheritdoc />
+    public async Task<IChildFile> MoveFromAsync(IChildFile fileToMove, IModifiableFolder source, bool overwrite, CancellationToken cancellationToken, MoveFromDelegate fallback)
+    {
+        if (fileToMove is not OneDriveFile)
+            await fallback(this, fileToMove, source, overwrite, cancellationToken);
+
+        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+
+        var copyBody = new CopyPostRequestBody
+        {
+            Name = fileToMove.Name,
+            ParentReference = new ItemReference
+            {
+                Id = Id,
+            },
+        };
+
+        var newItem = await _graphClient.Drives[drive.Id].Items[fileToMove.Id].Copy.PostAsync(
+            copyBody,
+            cancellationToken: cancellationToken
+        );
+
+        await DeleteAsync(fileToMove, cancellationToken);
+
+        return new OneDriveFile(_graphClient, newItem);
+    }
+
+    /// <inheritdoc />
+    public async Task<IChildFile> CreateCopyOfAsync(IFile fileToCopy, bool overwrite, CancellationToken cancellationToken, CreateCopyOfDelegate fallback)
+    {
+        if (fileToCopy is not OneDriveFile)
+            await fallback(this, fileToCopy, overwrite, cancellationToken);
+
+        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+
+        var copyBody = new CopyPostRequestBody
+        {
+            Name = fileToCopy.Name,
+            ParentReference = new ItemReference
+            {
+                Id = Id,
+            },
+        };
+
+        var newItem = await _graphClient.Drives[drive.Id].Items[fileToCopy.Id].Copy.PostAsync(
+            copyBody,
+            cancellationToken: cancellationToken
+        );
+
+        return new OneDriveFile(_graphClient, newItem);
     }
 }
