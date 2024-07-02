@@ -53,7 +53,7 @@ public sealed class OneDriveWriteStream : Stream
     /// <inheritdoc />
     public override void Flush()
     {
-        throw new NotImplementedException();
+        // Ignore calls to this. The stream is technically "flushed" when writing already.
     }
 
     /// <inheritdoc />
@@ -83,15 +83,13 @@ public sealed class OneDriveWriteStream : Stream
     /// <inheritdoc />
     public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
-        using var memoryStream = new MemoryStream(buffer);
-
         var httpRequestMessage = new HttpRequestMessage(HttpMethod.Put, UploadSession.UploadUrl)
         {
-            Content = new StreamContent(memoryStream)
+            Content = new ByteArrayContent(buffer)
         };
 
         httpRequestMessage.Content.Headers.ContentLength = buffer.LongLength;
-        httpRequestMessage.Content.Headers.ContentRange = new ContentRangeHeaderValue(offset, offset + count - 1);
+        httpRequestMessage.Content.Headers.ContentRange = new ContentRangeHeaderValue(offset, offset + buffer.LongLength - 1, buffer.LongLength);
 
         var response = await _httpClient.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 

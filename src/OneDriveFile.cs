@@ -22,6 +22,15 @@ public class OneDriveFile : IFile, IChildFile
     /// <summary>
     /// Creates a new instance of <see cref="OneDriveFile"/>.
     /// </summary>
+    public OneDriveFile(GraphServiceClient graphClient, Drive drive, DriveItem driveItem)
+        : this(graphClient, driveItem)
+    {
+        _drive = drive;
+    }
+
+    /// <summary>
+    /// Creates a new instance of <see cref="OneDriveFile"/>.
+    /// </summary>
     public OneDriveFile(GraphServiceClient graphClient, DriveItem driveItem)
     {
         _graphClient = graphClient;
@@ -50,7 +59,7 @@ public class OneDriveFile : IFile, IChildFile
         _drive ??= await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
         var parent = await _graphClient.Drives[_drive.Id].Items[DriveItem.ParentReference.Id].GetAsync(cancellationToken: cancellationToken);
 
-        return new OneDriveFolder(_graphClient, parent);
+        return new OneDriveFolder(_graphClient, _drive, parent);
     }
 
     /// <inheritdoc />
