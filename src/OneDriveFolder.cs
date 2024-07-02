@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using IOPath = System.IO.Path;
 
 namespace OwlCore.Storage.OneDrive;
 
@@ -25,6 +26,7 @@ public class OneDriveFolder :
 {
     private readonly GraphServiceClient _graphClient;
     private Drive? _drive;
+    private string? _path;
 
     /// <summary>
     /// Creates a new instance of <see cref="OneDriveFolder"/>.
@@ -37,6 +39,11 @@ public class OneDriveFolder :
 
     /// <inheritdoc />
     public string Id => DriveItem.Id;
+
+    /// <summary>
+    /// The path to this folder.
+    /// </summary>
+    public string Path => _path ??= IOPath.Combine(DriveItem.ParentReference.Path, Name);
 
     /// <inheritdoc />
     public string Name => DriveItem.Name;
