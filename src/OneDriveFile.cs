@@ -67,53 +67,10 @@ public class OneDriveFile : IFile, IChildFile
     {
         _drive ??= await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
 
-        switch (accessMode)
-        {
-            case FileAccess.Read:
-                return await _graphClient.Drives[_drive.Id].Items[Id].Content.GetAsync(cancellationToken: cancellationToken);
-            case FileAccess.Write:
-                {
-                    var uploadBody = new CreateUploadSessionPostRequestBody()
-                    {
-                        Item = new DriveItemUploadableProperties()
-                    };
-
-                    var uploadSession = await _graphClient
-                        .Drives[_drive.Id]
-                        .Items[Id]
-                        .CreateUploadSession
-                        .PostAsync(uploadBody, cancellationToken: cancellationToken);
-
-                    return new OneDriveWriteStream(uploadSession);
-                }
-            case FileAccess.ReadWrite:
-                {
-                    var uploadBody = new CreateUploadSessionPostRequestBody()
-                    {
-                        Item = new DriveItemUploadableProperties()
-                    };
-
-                    return await OpenFullDuplexStreamAsync(_drive, uploadBody, cancellationToken);
-                }
-            default:
-                throw new ArgumentOutOfRangeException(nameof(accessMode));
-        }
-    }
-
-    private async Task<Stream> OpenFullDuplexStreamAsync(Drive drive, CreateUploadSessionPostRequestBody uploadBody, CancellationToken cancellationToken)
-    {
-        var readStream = await _graphClient
-            .Drives[drive.Id]
+        return await _graphClient
+            .Drives[_drive.Id]
             .Items[Id]
             .Content
             .GetAsync(cancellationToken: cancellationToken);
-
-        var uploadSession = await _graphClient
-            .Drives[drive.Id]
-            .Items[Id]
-            .CreateUploadSession
-            .PostAsync(uploadBody, cancellationToken: cancellationToken);
-
-        return FullDuplexStream.Splice(readStream, new OneDriveWriteStream(uploadSession));
     }
 }
