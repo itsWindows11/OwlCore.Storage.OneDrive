@@ -67,6 +67,9 @@ public class OneDriveFolder :
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (type == StorableType.None)
+            throw new ArgumentOutOfRangeException(nameof(type), "Storable type is not valid.");
+
         _drive ??= await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
         var result = await _graphClient.Drives[_drive.Id].Items[Id].Children.GetAsync(cancellationToken: cancellationToken);
 
