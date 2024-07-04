@@ -10,6 +10,7 @@ using CommunityToolkit.Diagnostics;
 using OwlCore.Storage.OneDrive.Internal;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace OwlCore.Storage.OneDrive;
 
@@ -25,7 +26,7 @@ internal partial class OneDriveFileStream : LazySeekStream, IAsyncDisposable
     private readonly HttpClient? _httpClient;
     private readonly FileAccess _accessMode;
 
-    private readonly ConcurrentQueue<RangeData> _rangesToWrite = new();
+    private ConcurrentQueue<RangeData> _rangesToWrite = new();
 
     private bool _disposed;
 
@@ -109,7 +110,7 @@ internal partial class OneDriveFileStream
     public Task FlushRangeAsync(int offset, int count, CancellationToken cancellationToken)
     {
         if (!CanWrite)
-            throw new NotSupportedException("The stream does not support writing.");
+            throw new NotSupportedException("Writing is not supported.");
 
         return UploadRangeAsync(MemoryStream, offset, count, cancellationToken);
     }
@@ -118,21 +119,21 @@ internal partial class OneDriveFileStream
     public override void WriteByte(byte value)
     {
         MemoryStream.WriteByte(value);
-        _rangesToWrite.Enqueue(new RangeData((int)Position, 1, 1));
+        _rangesToWrite.EnqueueRangeItem(new RangeData((int)Position, 1));
     }
 
     /// <inheritdoc />
     public override void Write(byte[] buffer, int offset, int count)
     {
         MemoryStream.Write(buffer, offset, count);
-        _rangesToWrite.Enqueue(new RangeData(offset, count, buffer.Length));
+        _rangesToWrite.EnqueueRangeItem(new RangeData(offset, count));
     }
 
     /// <inheritdoc />
     public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
         await MemoryStream.WriteAsync(buffer, offset, count, cancellationToken);
-        _rangesToWrite.Enqueue(new RangeData(offset, count, buffer.Length));
+        _rangesToWrite.EnqueueRangeItem(new RangeData(offset, count));
     }
 
     private async Task UploadRangeAsync(MemoryStream stream, int offset, int count, CancellationToken cancellationToken)
