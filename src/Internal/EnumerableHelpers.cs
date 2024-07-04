@@ -4,7 +4,7 @@ using CommunityToolkit.Diagnostics;
 
 namespace OwlCore.Storage.OneDrive.Internal;
 
-internal static partial class EnumerableHelpers
+internal static class EnumerableHelpers
 {
     /// <summary>
     /// Split the elements of a sequence into chunks of size at most <paramref name="size"/>.

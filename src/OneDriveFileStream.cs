@@ -78,6 +78,8 @@ internal partial class OneDriveFileStream
             // Upload ranges in chunks.
             foreach (var chunk in tasks.Chunk(Environment.ProcessorCount))
                 Task.WaitAll(chunk);
+
+            _rangesToWrite.Clear();
         }
 
         base.Flush();
@@ -96,6 +98,8 @@ internal partial class OneDriveFileStream
             // Upload ranges in chunks.
             foreach (var chunk in tasks.Chunk(Environment.ProcessorCount))
                 await Task.WhenAll(chunk);
+
+            _rangesToWrite.Clear();
         }
 
         await base.FlushAsync(cancellationToken);
@@ -174,11 +178,7 @@ internal partial class OneDriveFileStream
             Flush();
 
             _httpClient?.Dispose();
-
-            while (!_rangesToWrite.IsEmpty)
-            {
-                _rangesToWrite.TryDequeue(out _);
-            }
+            _rangesToWrite.Clear();
 
             _disposed = true;
         }
@@ -194,11 +194,7 @@ internal partial class OneDriveFileStream
             await FlushAsync();
 
             _httpClient?.Dispose();
-
-            while (!_rangesToWrite.IsEmpty)
-            {
-                _rangesToWrite.TryDequeue(out _);
-            }
+            _rangesToWrite.Clear();
 
             _disposed = true;
         }
