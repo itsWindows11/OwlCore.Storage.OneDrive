@@ -35,10 +35,10 @@ internal partial class OneDriveFileStream : LazySeekStream, IAsyncDisposable
     public UploadSession? UploadSession { get; }
 
     /// <inheritdoc />
-    public override bool CanRead => _accessMode.HasFlag(FileAccess.Read);
+    public override bool CanRead => _accessMode.HasFlag(FileAccess.Read) && !_disposed;
 
     /// <inheritdoc />
-    public override bool CanWrite => _accessMode.HasFlag(FileAccess.Write);
+    public override bool CanWrite => _accessMode.HasFlag(FileAccess.Write) && !_disposed;
 
     /// <summary>
     /// Initializes a stream over a OneDrive file.
