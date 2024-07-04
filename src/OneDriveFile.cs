@@ -86,7 +86,7 @@ public class OneDriveFile : IFile, IChildFile
                 .CreateUploadSession
                 .PostAsync(uploadBody, cancellationToken: cancellationToken);
 
-            return new OneDriveFileStream(new HttpClient(), uploadSession, baseReadStream, DriveItem.Size.GetValueOrDefault(), accessMode);
+            return new OneDriveFileStream(new HttpClient() { Timeout = Timeout.InfiniteTimeSpan }, uploadSession, baseReadStream, DriveItem.Size.GetValueOrDefault(), accessMode);
         }
 
         throw new ArgumentOutOfRangeException(nameof(accessMode), "File access mode is not supported.");
