@@ -38,7 +38,7 @@ public class OneDriveFolder :
     }
 
     /// <summary>
-    /// Creates a new instance of <see cref="OneDriveFolder"/>.
+    /// Creates a new instance of <see cref="OneDriveFolder"/> with the current user's drive.
     /// </summary>
     public OneDriveFolder(GraphServiceClient graphClient, DriveItem driveItem)
     {
@@ -211,7 +211,7 @@ public class OneDriveFolder :
     public async Task<IChildFile> MoveFromAsync(IChildFile fileToMove, IModifiableFolder source, bool overwrite, CancellationToken cancellationToken, MoveFromDelegate fallback)
     {
         if (fileToMove is not OneDriveFile)
-            await fallback(this, fileToMove, source, overwrite, cancellationToken);
+            return await fallback(this, fileToMove, source, overwrite, cancellationToken);
 
         _drive ??= await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
 
@@ -238,7 +238,7 @@ public class OneDriveFolder :
     public async Task<IChildFile> CreateCopyOfAsync(IFile fileToCopy, bool overwrite, CancellationToken cancellationToken, CreateCopyOfDelegate fallback)
     {
         if (fileToCopy is not OneDriveFile)
-            await fallback(this, fileToCopy, overwrite, cancellationToken);
+            return await fallback(this, fileToCopy, overwrite, cancellationToken);
 
         _drive ??= await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
 

@@ -1,9 +1,9 @@
 using Microsoft.Graph;
 using Microsoft.Graph.Drives.Item.Items.Item.CreateUploadSession;
 using Microsoft.Graph.Models;
-using Nerdbank.Streams;
 using System;
 using System.IO;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using IOPath = System.IO.Path;
@@ -29,7 +29,7 @@ public class OneDriveFile : IFile, IChildFile
     }
 
     /// <summary>
-    /// Creates a new instance of <see cref="OneDriveFile"/>.
+    /// Creates a new instance of <see cref="OneDriveFile"/> with the current user's drive.
     /// </summary>
     public OneDriveFile(GraphServiceClient graphClient, DriveItem driveItem)
     {
@@ -67,10 +67,28 @@ public class OneDriveFile : IFile, IChildFile
     {
         _drive ??= await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
 
-        return await _graphClient
-            .Drives[_drive.Id]
-            .Items[Id]
-            .Content
-            .GetAsync(cancellationToken: cancellationToken);
+        if (accessMode == FileAccess.Read)
+        {
+            var baseReadStream = await _graphClient.Drives[_drive.Id].Items[Id].Content.GetAsync(cancellationToken: cancellationToken);
+            return new OneDriveFileStream(null, null, baseReadStream, DriveItem.Size.GetValueOrDefault(), accessMode);
+        } else if (accessMode == FileAccess.Write || accessMode == FileAccess.ReadWrite)
+        {
+            var baseReadStream = await _graphClient.Drives[_drive.Id].Items[Id].Content.GetAsync(cancellationToken: cancellationToken);
+
+            var uploadBody = new CreateUploadSessionPostRequestBody()
+            {
+                Item = new DriveItemUploadableProperties()
+            };
+
+            var uploadSession = await _graphClient
+                .Drives[_drive.Id]
+                .Items[Id]
+                .CreateUploadSession
+                .PostAsync(uploadBody, cancellationToken: cancellationToken);
+
+            return new OneDriveFileStream(new HttpClient(), uploadSession, baseReadStream, DriveItem.Size.GetValueOrDefault(), accessMode);
+        }
+
+        throw new ArgumentOutOfRangeException(nameof(accessMode), "File access mode is not supported.");
     }
 }
