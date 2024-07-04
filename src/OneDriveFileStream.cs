@@ -141,20 +141,23 @@ internal partial class OneDriveFileStream
             ThrowHelper.ThrowInvalidOperationException("Cannot write to this stream. The upload session is not available.");
         if (stream == null)
             ThrowHelper.ThrowArgumentNullException(nameof(stream));
-        if (offset < 0 || offset >= stream.Length)
+
+        var actualOffset = Position + offset;
+
+        if (offset < 0 || actualOffset >= stream.Length)
             ThrowHelper.ThrowArgumentOutOfRangeException(nameof(offset));
-        if (count <= 0 || offset + count > stream.Length)
+        if (count <= 0 || actualOffset + count > stream.Length)
             ThrowHelper.ThrowArgumentOutOfRangeException(nameof(count));
 
         // TODO: Find a way to optimize this.
-        var buffer = stream.ToArray().Skip(offset).Take(count).ToArray();
+        var buffer = stream.ToArray().Skip((int)actualOffset).Take(count).ToArray();
 
         using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Put, UploadSession!.UploadUrl)
         {
-            Content = new ByteArrayContent(buffer, offset, count)
+            Content = new ByteArrayContent(buffer, (int)actualOffset, count)
         };
 
-        httpRequestMessage.Content.Headers.ContentRange = new ContentRangeHeaderValue(offset, offset + count - 1, stream.Length);
+        httpRequestMessage.Content.Headers.ContentRange = new ContentRangeHeaderValue(actualOffset, actualOffset + count - 1, stream.Length);
 
         try
         {
