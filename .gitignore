@@ -477,3 +477,6 @@ $RECYCLE.BIN/
 *.lnk
 
 .env
+
+# Test results
+*.trx

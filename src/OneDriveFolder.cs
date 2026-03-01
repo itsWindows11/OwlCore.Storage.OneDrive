@@ -1,19 +1,26 @@
-﻿using Microsoft.Graph;
+using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System;
 
 namespace OwlCore.Storage.OneDrive;
 
 /// <summary>
 /// A folder implementation that interacts with a folder in OneDrive.
 /// </summary>
-public class OneDriveFolder : IChildFolder, IGetItem, IGetItemRecursive, IGetRoot
+public class OneDriveFolder : IChildFolder, IGetItem, IGetItemRecursive, IGetRoot, ICreatedAtOffset, ILastAccessedAtOffset, ILastModifiedAtOffset
 {
     private readonly GraphServiceClient _graphClient;
+    private OneDriveCreatedAtProperty? _createdAt;
+    private OneDriveCreatedAtOffsetProperty? _createdAtOffset;
+    private OneDriveLastAccessedAtProperty? _lastAccessedAt;
+    private OneDriveLastAccessedAtOffsetProperty? _lastAccessedAtOffset;
+    private OneDriveLastModifiedAtProperty? _lastModifiedAt;
+    private OneDriveLastModifiedAtOffsetProperty? _lastModifiedAtOffset;
 
     /// <summary>
     /// Creates a new instance of <see cref="OneDriveFolder"/>.
@@ -25,10 +32,10 @@ public class OneDriveFolder : IChildFolder, IGetItem, IGetItemRecursive, IGetRoo
     }
 
     /// <inheritdoc />
-    public string Id => DriveItem.Id;
+    public string Id => DriveItem.Id!;
 
     /// <inheritdoc />
-    public string Name => DriveItem.Name;
+    public string Name => DriveItem.Name!;
 
     /// <summary>
     /// The graph item that was provided as the backing implementation for this file.
@@ -36,14 +43,35 @@ public class OneDriveFolder : IChildFolder, IGetItem, IGetItemRecursive, IGetRoo
     public DriveItem DriveItem { get; }
 
     /// <inheritdoc />
+    public ICreatedAtProperty CreatedAt => _createdAt ??= new OneDriveCreatedAtProperty(this, _graphClient, DriveItem.Id!);
+
+    /// <inheritdoc />
+    public ICreatedAtOffsetProperty CreatedAtOffset => _createdAtOffset ??= new OneDriveCreatedAtOffsetProperty(this, _graphClient, DriveItem.Id!);
+
+    /// <inheritdoc />
+    public ILastAccessedAtProperty LastAccessedAt => _lastAccessedAt ??= new OneDriveLastAccessedAtProperty(this, _graphClient, DriveItem.Id!);
+
+    /// <inheritdoc />
+    public ILastAccessedAtOffsetProperty LastAccessedAtOffset => _lastAccessedAtOffset ??= new OneDriveLastAccessedAtOffsetProperty(this, _graphClient, DriveItem.Id!);
+
+    /// <inheritdoc />
+    public ILastModifiedAtProperty LastModifiedAt => _lastModifiedAt ??= new OneDriveLastModifiedAtProperty(this, _graphClient, DriveItem.Id!);
+
+    /// <inheritdoc />
+    public ILastModifiedAtOffsetProperty LastModifiedAtOffset => _lastModifiedAtOffset ??= new OneDriveLastModifiedAtOffsetProperty(this, _graphClient, DriveItem.Id!);
+
+    /// <inheritdoc />
     public virtual async IAsyncEnumerable<IStorableChild> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
-        var result = await _graphClient.Drives[drive.Id].Items[Id].Children.GetAsync(cancellationToken: cancellationToken);
+        if (type == StorableType.None)
+            throw new ArgumentOutOfRangeException(nameof(type));
 
-        foreach (var item in result.Value)
+        var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
+        var result = await _graphClient.Drives[drive!.Id].Items[Id].Children.GetAsync(cancellationToken: cancellationToken);
+
+        foreach (var item in result!.Value!)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -64,7 +92,7 @@ public class OneDriveFolder : IChildFolder, IGetItem, IGetItemRecursive, IGetRoo
         try
         {
             var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
-            var driveItem = await _graphClient.Drives[drive.Id].Items[id].GetAsync(cancellationToken: cancellationToken);
+            var driveItem = await _graphClient.Drives[drive!.Id].Items[id].GetAsync(cancellationToken: cancellationToken);
 
             if (driveItem?.Folder is not null)
                 return new OneDriveFolder(_graphClient, driveItem);
@@ -87,9 +115,9 @@ public class OneDriveFolder : IChildFolder, IGetItem, IGetItemRecursive, IGetRoo
             return null;
 
         var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
-        var parentDriveItem = await _graphClient.Drives[drive.Id].Items[DriveItem.ParentReference.Id].GetAsync(cancellationToken: cancellationToken);
+        var parentDriveItem = await _graphClient.Drives[drive!.Id].Items[DriveItem.ParentReference.Id].GetAsync(cancellationToken: cancellationToken);
 
-        return new OneDriveFolder(_graphClient, parentDriveItem);
+        return new OneDriveFolder(_graphClient, parentDriveItem!);
     }
 
     /// <inheritdoc />
@@ -99,8 +127,8 @@ public class OneDriveFolder : IChildFolder, IGetItem, IGetItemRecursive, IGetRoo
             return null;
 
         var drive = await _graphClient.Me.Drive.GetAsync(cancellationToken: cancellationToken);
-        var rootDriveItem = await _graphClient.Drives[drive.Id].Root.GetAsync(cancellationToken: cancellationToken);
+        var rootDriveItem = await _graphClient.Drives[drive!.Id].Root.GetAsync(cancellationToken: cancellationToken);
 
-        return new OneDriveFolder(_graphClient, rootDriveItem);
+        return new OneDriveFolder(_graphClient, rootDriveItem!);
     }
 }
