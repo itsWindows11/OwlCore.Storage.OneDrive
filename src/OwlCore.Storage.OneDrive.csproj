@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net8.0;net9.0;net10.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>10.0</LangVersion>
     <WarningsAsErrors>nullable</WarningsAsErrors>
@@ -14,13 +14,27 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
     <Author>Arlo Godfrey</Author>
-    <Version>0.2.1</Version>
+    <Version>0.3.0</Version>
     <Product>OwlCore</Product>
     <Description></Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageIcon>logo.png</PackageIcon>
     <PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Storage.OneDrive</PackageProjectUrl>
     <PackageReleaseNotes>
+--- 0.3.0 ---
+[New]
+OneDriveFile now implements ICreatedAtOffset, ILastAccessedAtOffset, and ILastModifiedAtOffset.
+OneDriveFolder now implements ICreatedAtOffset, ILastAccessedAtOffset, and ILastModifiedAtOffset.
+Added OneDriveCreatedAtProperty, OneDriveCreatedAtOffsetProperty, OneDriveLastAccessedAtProperty, OneDriveLastAccessedAtOffsetProperty, OneDriveLastModifiedAtProperty, OneDriveLastModifiedAtOffsetProperty — each backed by Microsoft Graph DriveItem timestamp fields.
+
+[Dependencies]
+Updated OwlCore.Storage to 0.15.0.
+Updated Microsoft.Graph to 5.103.0.
+Updated Microsoft.SourceLink.GitHub to 10.0.103.
+Updated System.Linq.Async to 7.0.0.
+Updated Microsoft.Bcl.AsyncInterfaces to 10.0.3.
+Added net9.0 and net10.0 target frameworks.
+
 --- 0.2.1 ---
 [Improvements]
 Added missing package release notes.
@@ -70,15 +84,16 @@ Initial release of OwlCore.Storage.OneDrive.
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Graph" Version="5.44.0" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-    <PackageReference Include="OwlCore.Storage" Version="0.10.0" />
-    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.3" Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
+    <PackageReference Include="Microsoft.Graph" Version="5.103.0" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.103" PrivateAssets="All" />
+    <PackageReference Include="OwlCore.Storage" Version="0.15.0" />
+    <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="All" />
+    <PackageReference Include="System.Linq.Async" Version="7.0.0" Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="logo.png">
+    <None Include="logo.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
