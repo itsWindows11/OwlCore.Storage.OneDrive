@@ -77,7 +77,7 @@ Initial release of OwlCore.Storage.OneDrive.
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="LICENSE.txt">
+    <None Include="../LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
